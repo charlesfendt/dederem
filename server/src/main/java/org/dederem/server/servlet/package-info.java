@@ -19,9 +19,9 @@
  * MA 02110-1301  USA
  */
 /**
- * Main package for the common part of the dederem project.
+ * Package for servlet definition.
  *
  * @author charles
  */
-package org.dederem.common;
+package org.dederem.server.servlet;
 

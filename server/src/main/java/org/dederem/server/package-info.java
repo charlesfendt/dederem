@@ -19,9 +19,9 @@
  * MA 02110-1301  USA
  */
 /**
- * Main package for the common part of the dederem project.
+ * Main package for the server part of the dederem project.
  *
  * @author charles
  */
-package org.dederem.common;
+package org.dederem.server;
 
