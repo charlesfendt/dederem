@@ -13,6 +13,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.dederem.common</groupId>
+			<artifactId>org.dederem.common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${dep.lombok-project.version}</version>

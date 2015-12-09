@@ -34,11 +34,8 @@ public final class DebPackage {
 
 	/** Name of the debian package. */
 	private String packageName;
+	/** Architecture of the debian package. */
+	private String packageArch;
 	/** Version of the debian package. */
 	private String packageVersion;
-	/** HASH of the debian package. */
-	private String packageHash;
-	
-	/** TRUE if present on the file system. */
-	private boolean present;
 }
