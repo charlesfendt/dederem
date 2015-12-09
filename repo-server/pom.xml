@@ -7,13 +7,14 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>org.dederem.server</artifactId>
+	<groupId>org.dederem.repo</groupId>
+	<artifactId>org.dederem.repo.server</artifactId>
 	<packaging>war</packaging>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.dederem</groupId>
-			<artifactId>org.dederem.common</artifactId>
+			<groupId>org.dederem.repo</groupId>
+			<artifactId>org.dederem.repo.common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		

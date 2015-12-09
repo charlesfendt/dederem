@@ -12,8 +12,8 @@
 	</properties>
 	
 	<modules>
-		<module>common</module>
-		<module>server</module>
+		<module>repo-common</module>
+		<module>repo-server</module>
 	</modules>
 	
 	<build>
