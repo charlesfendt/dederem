@@ -11,6 +11,7 @@
 		<dep.commons-io.version>2.4</dep.commons-io.version>
 		<dep.commons-lang3.version>3.4</dep.commons-lang3.version>
 		<dep.javaee-api.version>7.0</dep.javaee-api.version>
+		<dep.junit.version>4.12</dep.junit.version>
 	</properties>
 	
 	<modules>

@@ -41,14 +41,14 @@ import org.dederem.common.bean.DebVersion;
  *
  */
 @Singleton
-public final class VersionAnalyseService {
-	
-	public DebVersion analyze(final InputStream input) throws IOException {
-		final DebVersion result = new DebVersion();
+public class VersionAnalyseService {
 
+	public final DebVersion analyze(final InputStream input) throws IOException {
+		final DebVersion result = new DebVersion();
+		
 		final Map<String, StringBuilder> data = new HashMap<>();
 		StringBuilder lastData = null; // NOPMD - init
-
+		
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8));
 		String line = reader.readLine();
 		while (line != null) {
@@ -76,7 +76,7 @@ public final class VersionAnalyseService {
 		}
 		return result;
 	}
-
+	
 	private DebPackage readPackageDesc(final Map<String, StringBuilder> data) {
 		final DebPackage result;
 		final String name = this.extractValue(data, "Package");
@@ -93,7 +93,7 @@ public final class VersionAnalyseService {
 		}
 		return result;
 	}
-
+	
 	private String extractValue(final Map<String, StringBuilder> data, final String key) {
 		final StringBuilder val = data.get(key);
 		return val == null ? null : val.toString().trim();
