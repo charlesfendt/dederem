@@ -12,11 +12,6 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.dederem.common</groupId>
-			<artifactId>org.dederem.common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 		
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -25,9 +20,27 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>${dep.javaee-api.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.dederem.common</groupId>
+			<artifactId>org.dederem.common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>${dep.commons-io.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${dep.commons-lang3.version}</version>
 		</dependency>
 	</dependencies>
 

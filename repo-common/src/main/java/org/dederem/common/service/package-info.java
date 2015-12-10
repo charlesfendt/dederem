@@ -1,5 +1,5 @@
 /**
- * DebDevice.java
+ * package-info.java
  *
  * Copyright (c) 2015, Charles Fendt. All rights reserved.
  *
@@ -18,30 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.dederem.common.bean;
-
-import java.util.Date;
-import java.util.List;
-
-import lombok.Getter;
-import lombok.Setter;
-
 /**
- * Description of a Debian device.
+ * Package for the services definitions.
  *
  * @author charles
  */
-@Getter
-@Setter
-public final class DebDevice {
+package org.dederem.common.service;
 
-	/** UID of the device. */
-	private String deviceUid;
-
-	/** Time stamp of the first request from this device on the server. */
-	private Date dateFirstSeen;
-	/** Time stamp of the last request from this device on the server. */
-	private Date dateLastSeen;
-	/** List of packages in the dpkg database. */
-	private List<DebPackageStatus> packages;
-}
