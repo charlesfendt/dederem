@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.dederem.common.bean.DebPackage;
+import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.DebVersion;
 import org.dederem.common.service.VersionAnalyseService;
 import org.junit.Assert;
@@ -38,7 +38,7 @@ import org.junit.Test;
  * @author charles
  */
 public final class VersionAnalyseServiceTest {
-
+	
 	/**
 	 * Test method.
 	 *
@@ -48,12 +48,12 @@ public final class VersionAnalyseServiceTest {
 	@Test
 	public void testParsing() throws IOException {
 		final VersionAnalyseService service = new VersionAnalyseService();
-
+		
 		final InputStream input = new GZIPInputStream(this.getClass().getResourceAsStream("/repo/Packages.gz"));
 		try {
 			final DebVersion ver = service.analyze(input);
 			Assert.assertNotNull(ver);
-			final List<DebPackage> pkgList = ver.getPackages();
+			final List<DebPackageDesc> pkgList = ver.getPackages();
 			Assert.assertNotNull(pkgList);
 			Assert.assertFalse(pkgList.isEmpty());
 		} finally {

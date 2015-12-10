@@ -34,12 +34,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public final class DebVersion {
-
+	
 	/** Name of the version. */
 	private String versionName;
-	
+
 	/** Name of the file which define the version. */
 	private String packageFile;
-	
-	private final List<DebPackage> packages = new LinkedList<>();
+
+	/** List of packages ofr the given version file. */
+	private final List<DebPackageDesc> packages = new LinkedList<>();
 }

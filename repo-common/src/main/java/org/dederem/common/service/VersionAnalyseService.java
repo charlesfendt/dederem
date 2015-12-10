@@ -31,7 +31,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
-import org.dederem.common.bean.DebPackage;
+import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.DebVersion;
 
 /**
@@ -54,7 +54,7 @@ public class VersionAnalyseService {
 		while (line != null) {
 			if (line.isEmpty()) {
 				// manage the end of the bloc
-				final DebPackage pkgDesc = this.readPackageDesc(data);
+				final DebPackageDesc pkgDesc = this.readPackageDesc(data);
 				if (pkgDesc != null) {
 					result.getPackages().add(pkgDesc);
 				}
@@ -77,25 +77,33 @@ public class VersionAnalyseService {
 		return result;
 	}
 	
-	private DebPackage readPackageDesc(final Map<String, StringBuilder> data) {
-		final DebPackage result;
-		final String name = this.extractValue(data, "Package");
-		final String version = this.extractValue(data, "Version");
-		final String architecture = this.extractValue(data, "Architecture");
+	private DebPackageDesc readPackageDesc(final Map<String, StringBuilder> data) {
+		final DebPackageDesc result;
+		final String name = this.extractValueStr(data, "Package");
+		final String version = this.extractValueStr(data, "Version");
+		final String architecture = this.extractValueStr(data, "Architecture");
 		if (StringUtils.isNoneEmpty(name, version, architecture)) {
-			result = new DebPackage();
+			result = new DebPackageDesc();
 			result.setPackageName(name);
 			result.setPackageVersion(version);
 			result.setPackageArch(architecture);
-			// FIXME
+			result.setPackageSha1(this.extractValueStr(data, "SHA1"));
+			result.setPackageSha256(this.extractValueStr(data, "SHA256"));
+			result.setFileName(this.extractValueStr(data, "Filename"));
+			result.setFileSize(this.extractValueLong(data, "Size"));
 		} else {
 			result = null;
 		}
 		return result;
 	}
 	
-	private String extractValue(final Map<String, StringBuilder> data, final String key) {
+	private String extractValueStr(final Map<String, StringBuilder> data, final String key) {
 		final StringBuilder val = data.get(key);
 		return val == null ? null : val.toString().trim();
+	}
+
+	private long extractValueLong(final Map<String, StringBuilder> data, final String key) {
+		final String val = this.extractValueStr(data, key);
+		return StringUtils.isNumeric(val) ? Long.parseLong(val) : -1;
 	}
 }
