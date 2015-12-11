@@ -26,8 +26,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
-import javax.inject.Singleton;
+import javax.ejb.Singleton;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
@@ -43,7 +44,29 @@ import org.dederem.common.bean.DebVersion;
 @Singleton
 public class VersionAnalyseService {
 
-	public final DebVersion analyze(final InputStream input) throws IOException {
+	/**
+	 * Read method for "Packages" file.
+	 *
+	 * @param input
+	 *            InputStream on the text file
+	 * @return The object populated with the content of the file.
+	 * @throws IOException
+	 *             I/O error.
+	 */
+	public final DebVersion analyzeGzFile(final InputStream input) throws IOException {
+		return this.analyzeFile(new GZIPInputStream(input));
+	}
+
+	/**
+	 * Read method for "Packages" file.
+	 *
+	 * @param input
+	 *            InputStream on the text file
+	 * @return The object populated with the content of the file.
+	 * @throws IOException
+	 *             I/O error.
+	 */
+	public final DebVersion analyzeFile(final InputStream input) throws IOException {
 		final DebVersion result = new DebVersion();
 		
 		final Map<String, StringBuilder> data = new HashMap<>();

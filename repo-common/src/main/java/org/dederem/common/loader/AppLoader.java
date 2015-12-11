@@ -1,5 +1,5 @@
 /**
- * DebVersion.java
+ * ConfigLoader.java
  *
  * Copyright (c) 2015, Charles Fendt. All rights reserved.
  *
@@ -18,29 +18,40 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.dederem.common.bean;
+package org.dederem.common.loader;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.io.IOException;
 
-import lombok.Getter;
-import lombok.Setter;
+import javax.annotation.PostConstruct;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.inject.Inject;
+
+import org.dederem.common.service.ConfigService;
 
 /**
- * Description of a Debian version.
+ * Loader for the application.
  *
  * @author charles
  */
-@Getter
-@Setter
-public final class DebVersion {
+@Startup
+@Singleton
+public class AppLoader {
 
-	/** Name of the version. */
-	private String versionName;
-	
-	/** Name of the file which define the version. */
-	private String packageFile;
-	
-	/** List of packages for the given version file. */
-	private final List<DebPackageDesc> packages = new LinkedList<>();
+	/** The application configuration service. */
+	@Inject
+	private ConfigService configService;
+
+	/**
+	 * Application initialization.
+	 *
+	 * @throws IOException
+	 *             I/O error.
+	 */
+	@PostConstruct
+	public void load() throws IOException {
+		this.configService.loadConfig();
+
+		this.configService.loadRepo();
+	}
 }
