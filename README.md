@@ -7,3 +7,6 @@ DEbian DEvice REpository Manager wants to offer a way to manage the versioning o
 - Mapping between devices and proposed version
 - Update statistics per device
 - Statistics on deployed versions
+
+The Debian repository format is describe in https://wiki.debian.org/RepositoryFormat
+

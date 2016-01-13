@@ -20,6 +20,7 @@
  */
 package org.dederem.common.bean;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Delegate;
@@ -31,22 +32,23 @@ import lombok.experimental.Delegate;
  */
 @Getter
 @Setter
+@EqualsAndHashCode
 public final class DebPackageDesc {
-
-	/** Package description. */
-	@Delegate
-	private final DebPackage debPackage = new DebPackage();
-
-	/** HASH of the Debian package. */
-	private String packageSha1;
-	/** HASH of the Debian package. */
-	private String packageSha256;
-	/** TRUE if present on the file system. */
-	private boolean present;
-	
-	/** File name. */
-	private String fileName;
-	/** File size. */
-	private long fileSize;
-	
+    
+    /** Package description. */
+    @Delegate
+    private final DebPackage debPackage = new DebPackage();
+    
+    /** HASH of the Debian package. */
+    private String packageSha1;
+    /** HASH of the Debian package. */
+    private String packageSha256;
+    /** TRUE if present on the file system. */
+    private boolean present;
+    
+    /** File name. */
+    private String fileName;
+    /** File size. */
+    private long fileSize;
+    
 }

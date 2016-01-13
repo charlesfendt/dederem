@@ -20,6 +20,7 @@
  */
 package org.dederem.common.bean;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,12 +31,13 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@EqualsAndHashCode
 public final class DebPackage {
-
-	/** Name of the debian package. */
-	private String packageName;
-	/** Architecture of the debian package. */
-	private String packageArch;
-	/** Version of the debian package. */
-	private String packageVersion;
+    
+    /** Name of the debian package. */
+    private String packageName;
+    /** Architecture of the debian package. */
+    private String packageArch;
+    /** Version of the debian package. */
+    private String packageVersion;
 }

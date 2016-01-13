@@ -27,9 +27,9 @@ import java.util.Properties;
 
 import javax.ejb.Singleton;
 
-import lombok.Getter;
-
 import org.apache.commons.lang3.StringUtils;
+
+import lombok.Getter;
 
 /**
  * Service for the configuration management.
@@ -38,48 +38,38 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 public class ConfigService {
-
-	/** The directory for the configuration. */
-	@Getter
-	private final File configDir;
-	/** The directory for the repository. */
-	@Getter
-	private final File repoDir;
-	
-	/**
-	 * Default constructor.
-	 *
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	public ConfigService() throws IOException {
-		super();
-
-		final Properties props = new Properties();
-		try (final InputStream input = this.getClass().getResourceAsStream("/config/defaultConfig.properties")) {
-			props.load(input);
-		}
-		this.configDir = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem"));
-		this.repoDir = new File(StringUtils.defaultIfEmpty(props.getProperty("repo.dir"), "/opt/dederem"));
-	}
-	
-	/**
-	 * Method to read the configuration.
-	 *
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	public final void loadConfig() throws IOException {
-		// FIXME
-	}
-
-	/**
-	 * Method to read the repository.
-	 *
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	public void loadRepo() throws IOException {
-		// FIXME
-	}
+    
+    /** The directory for the configuration. */
+    @Getter
+    private final File configDir;
+    /** The directory for the repository. */
+    @Getter
+    private final File repoDir;
+    
+    /**
+     * Default constructor.
+     *
+     * @throws IOException
+     *             I/O error.
+     */
+    public ConfigService() throws IOException {
+        super();
+        
+        final Properties props = new Properties();
+        try (final InputStream input = this.getClass().getResourceAsStream("/config/defaultConfig.properties")) {
+            props.load(input);
+        }
+        this.configDir = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem"));
+        this.repoDir = new File(StringUtils.defaultIfEmpty(props.getProperty("repo.dir"), "/opt/dederem"));
+    }
+    
+    /**
+     * Method to read the configuration.
+     *
+     * @throws IOException
+     *             I/O error.
+     */
+    public final void loadConfig() throws IOException {
+        // FIXME
+    }
 }
