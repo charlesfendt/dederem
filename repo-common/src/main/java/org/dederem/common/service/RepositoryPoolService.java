@@ -4,6 +4,12 @@
 package org.dederem.common.service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,8 +19,10 @@ import java.util.Set;
 
 import javax.ejb.Singleton;
 import javax.inject.Inject;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.SuiteDesc;
 
@@ -44,12 +52,9 @@ public final class RepositoryPoolService {
      */
     public RepositoryPoolService() {
         super();
-        // FIXME use a configuration parameter to manage suites.
-        final Set<String> suitesLst = new HashSet<>();
-        suitesLst.add("main");
-        suitesLst.add("contrib");
-        suitesLst.add("non-free");
-        this.suites = Collections.unmodifiableSet(suitesLst);
+        // use the configuration parameter to manage suites.
+        final String[] suites = StringUtils.split(this.configService.getSuites(), " \t,;");
+        this.suites = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(suites)));
 
         for (final String suite : this.suites) {
             this.suitesDesc.put(suite, new SuiteDesc());
@@ -91,10 +96,37 @@ public final class RepositoryPoolService {
         if (desc.exists()) {
             // load description
         } else {
-            // generate the description file.
-            // dpkg --info $deb_path control | grep -E "^(Version|Package|Architecture)"
+            try {
+                // generate the description file.
+
+                // dpkg --info $deb_path control | grep -E "^(Version|Package|Architecture)"
+                this.hashFile(desc, result);
+            } catch (final Exception ex) {
+                ex.printStackTrace();// FIXME logger
+            }
         }
         // FIXME
         return result;
+    }
+    
+    private void hashFile(final File file, final DebPackageDesc desc) throws NoSuchAlgorithmException, IOException {
+        try (InputStream inputStream = new FileInputStream(file)) {
+            final MessageDigest digestMD5 = MessageDigest.getInstance("MD5");
+            final MessageDigest digestSHA1 = MessageDigest.getInstance("SHA1");
+            final MessageDigest digestSHA256 = MessageDigest.getInstance("SHA256");
+            
+            final byte[] bytesBuffer = new byte[4096];
+            int bytesRead = -1;
+            
+            while ((bytesRead = inputStream.read(bytesBuffer)) != -1) {
+                digestMD5.update(bytesBuffer, 0, bytesRead);
+                digestSHA1.update(bytesBuffer, 0, bytesRead);
+                digestSHA256.update(bytesBuffer, 0, bytesRead);
+            }
+            
+            desc.setPackageMd5(DatatypeConverter.printHexBinary(digestMD5.digest()));
+            desc.setPackageSha1(DatatypeConverter.printHexBinary(digestSHA1.digest()));
+            desc.setPackageSha256(DatatypeConverter.printHexBinary(digestSHA256.digest()));
+        }
     }
 }

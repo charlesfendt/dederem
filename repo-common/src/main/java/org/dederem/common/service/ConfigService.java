@@ -21,6 +21,7 @@
 package org.dederem.common.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -38,14 +39,18 @@ import lombok.Getter;
  */
 @Singleton
 public class ConfigService {
-    
-    /** The directory for the configuration. */
+
+    /** The Configuration file. */
     @Getter
-    private final File configDir;
+    private final File configFile;
     /** The directory for the repository. */
     @Getter
     private final File repoDir;
-    
+
+    /** List of supported suites. */
+    @Getter
+    private String suites;
+
     /**
      * Default constructor.
      *
@@ -54,15 +59,15 @@ public class ConfigService {
      */
     public ConfigService() throws IOException {
         super();
-        
+
         final Properties props = new Properties();
         try (final InputStream input = this.getClass().getResourceAsStream("/config/defaultConfig.properties")) {
             props.load(input);
         }
-        this.configDir = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem"));
+        this.configFile = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem.conf"));
         this.repoDir = new File(StringUtils.defaultIfEmpty(props.getProperty("repo.dir"), "/opt/dederem"));
     }
-    
+
     /**
      * Method to read the configuration.
      *
@@ -70,6 +75,13 @@ public class ConfigService {
      *             I/O error.
      */
     public final void loadConfig() throws IOException {
-        // FIXME
+        final Properties props = new Properties();
+        if (this.configFile.exists()) {
+            try (InputStream input = new FileInputStream(this.configFile)) {
+                props.load(input);
+            }
+        }
+
+        this.suites = StringUtils.defaultIfBlank(props.getProperty("suites"), "main, contrib, non-free");
     }
 }
