@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +56,9 @@ public class ConfigService {
     /** List of supported suites. */
     @Getter
     private String suites;
+    /** The base repository. */
+    @Getter
+    private String baseRepository;
     
     /**
      * Default constructor.
@@ -81,7 +85,8 @@ public class ConfigService {
      * @throws IOException
      *             I/O error.
      */
-    public final void loadConfig() throws IOException {
+    @PostConstruct
+    public final void initialize() throws IOException {
         final Properties props = new Properties();
         if (this.configFile.exists()) {
             try (InputStream input = new FileInputStream(this.configFile)) {
@@ -90,5 +95,6 @@ public class ConfigService {
         }
         
         this.suites = StringUtils.defaultIfBlank(props.getProperty("suites"), "main, contrib, non-free");
+        this.baseRepository = StringUtils.defaultIfBlank(props.getProperty("baseRepository"), "http://ftp.de.debian.org/debian/dist/");
     }
 }

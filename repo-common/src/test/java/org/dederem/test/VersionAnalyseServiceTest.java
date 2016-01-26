@@ -40,12 +40,12 @@ import org.junit.Test;
  * @author charles
  */
 public final class VersionAnalyseServiceTest {
-
+    
     /** Singleton J2EE for injection. */
     private final ConfigService config = new ConfigService();
     /** Singleton J2EE for injection. */
     private final RepositoryPoolService repoPool = new RepositoryPoolService();
-    
+
     /**
      * Initialization of the test class.
      *
@@ -54,14 +54,14 @@ public final class VersionAnalyseServiceTest {
      */
     @Before
     public void initialize() throws Exception {
-        this.config.loadConfig();
-        
+        this.config.initialize();
+
         final Field field1 = RepositoryPoolService.class.getDeclaredField("configService");
         field1.setAccessible(true);
         field1.set(this.repoPool, this.config);
         this.repoPool.initialize();
     }
-    
+
     /**
      * Test method.
      *
@@ -74,7 +74,7 @@ public final class VersionAnalyseServiceTest {
         final Field field1 = VersionAnalyseService.class.getDeclaredField("repoService");
         field1.setAccessible(true);
         field1.set(service, this.repoPool);
-
+        
         final InputStream input = this.getClass().getResourceAsStream("/repo/Packages.gz");
         try {
             final DebVersion ver = service.analyzeGzFile("main", input);

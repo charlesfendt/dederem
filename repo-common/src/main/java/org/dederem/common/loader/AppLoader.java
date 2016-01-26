@@ -27,7 +27,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 
-import org.dederem.common.service.ConfigService;
 import org.dederem.common.service.RepositoryPoolService;
 
 /**
@@ -38,10 +37,6 @@ import org.dederem.common.service.RepositoryPoolService;
 @Startup
 @Singleton
 public class AppLoader {
-
-    /** The application configuration service. */
-    @Inject
-    private ConfigService configService;
 
     /** The service for repository pool management. */
     @Inject
@@ -55,7 +50,6 @@ public class AppLoader {
      */
     @PostConstruct
     public void load() throws IOException {
-        this.configService.loadConfig();
         this.repoPoolService.reloadCache();
     }
 }
