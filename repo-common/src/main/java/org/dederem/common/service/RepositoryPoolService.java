@@ -24,14 +24,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.dederem.common.bean.DebPackage;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.SuiteDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 
@@ -43,13 +47,16 @@ import lombok.Getter;
 @Singleton
 public final class RepositoryPoolService {
     
+    /** Logger of the class. */
+    private static final Logger LOG = LoggerFactory.getLogger(RepositoryPoolService.class);
+    
     /** Configuration service. */
     @Inject
     private ConfigService configService;
     
     /** List of suites to manage. */
     @Getter
-    private final Set<String> suites;
+    private Set<String> suites;
 
     /** List of suites to manage. */
     private final Map<String, SuiteDesc> suitesDesc = new HashMap<>();
@@ -62,6 +69,17 @@ public final class RepositoryPoolService {
      */
     public RepositoryPoolService() {
         super();
+        
+        // check if /usr/bin/dpkg exists
+        final File dpkg = new File("/usr/bin/dpkg");
+        this.useUsrBinDpkg = dpkg.exists();
+    }
+    
+    /**
+     * Initialization method.
+     */
+    @PostConstruct
+    public void initialize() {
         // use the configuration parameter to manage suites.
         final String[] suites = StringUtils.split(this.configService.getSuites(), " \t,;");
         this.suites = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(suites)));
@@ -69,10 +87,6 @@ public final class RepositoryPoolService {
         for (final String suite : this.suites) {
             this.suitesDesc.put(suite, new SuiteDesc());
         }
-        
-        // check if /usr/bin/dpkg exists
-        final File dpkg = new File("/usr/bin/dpkg");
-        this.useUsrBinDpkg = dpkg.exists();
     }
     
     /**
@@ -96,7 +110,7 @@ public final class RepositoryPoolService {
                     final DebPackageDesc elt = this.loadPackageDesc(nextDeb);
                     desc.getPackages().put(elt.getDebPackage(), elt);
                 } catch (final IOException ex) {
-                    ex.printStackTrace(); // FIXME
+                    RepositoryPoolService.LOG.error(ex.getMessage(), ex);
                 }
             }
         }
@@ -104,7 +118,7 @@ public final class RepositoryPoolService {
 
     /**
      * Method to load a file in the pool.
-     * 
+     *
      * @param deb
      *            Debian package.
      * @return A The package description object
@@ -224,5 +238,25 @@ public final class RepositoryPoolService {
             desc.setPackageSha1(DatatypeConverter.printHexBinary(digestSHA1.digest()));
             desc.setPackageSha256(DatatypeConverter.printHexBinary(digestSHA256.digest()));
         }
+    }
+    
+    /**
+     * Getter.
+     *
+     * @param suiteStr
+     *            Name of the suite for the package.
+     * @param pack
+     *            Package information to search.
+     * @return The package in the local repository or null if not found.
+     */
+    public DebPackageDesc getPackageInLocalRepo(final String suiteStr, final DebPackage pack) {
+        final DebPackageDesc result;
+        final SuiteDesc suite = this.suitesDesc.get(suiteStr);
+        if (suite == null) {
+            result = null;
+        } else {
+            result = suite.getPackages().get(pack);
+        }
+        return result;
     }
 }

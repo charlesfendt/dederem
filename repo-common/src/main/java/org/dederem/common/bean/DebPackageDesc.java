@@ -34,11 +34,30 @@ import lombok.experimental.Delegate;
 @Setter
 @EqualsAndHashCode
 public final class DebPackageDesc {
-
+    
     /** Package description. */
     @Delegate
-    private final DebPackage debPackage = new DebPackage();
+    private final DebPackage debPackage;
 
+    /**
+     * Default constructor.
+     */
+    public DebPackageDesc() {
+        super();
+        this.debPackage = new DebPackage();
+    }
+    
+    /**
+     * Constructor.
+     * 
+     * @param pack
+     *            Package information.
+     */
+    public DebPackageDesc(final DebPackage pack) {
+        super();
+        this.debPackage = pack == null ? new DebPackage() : pack;
+    }
+    
     /** HASH of the Debian package. */
     private String packageMd5;
     /** HASH of the Debian package. */
@@ -47,10 +66,10 @@ public final class DebPackageDesc {
     private String packageSha256;
     /** TRUE if present on the file system. */
     private boolean present;
-
+    
     /** File name. */
     private String fileName;
     /** File size. */
     private long fileSize;
-
+    
 }

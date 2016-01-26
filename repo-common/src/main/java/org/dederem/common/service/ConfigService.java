@@ -29,6 +29,8 @@ import java.util.Properties;
 import javax.ejb.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 
@@ -39,35 +41,40 @@ import lombok.Getter;
  */
 @Singleton
 public class ConfigService {
-
+    
+    /** Logger of the class. */
+    private static final Logger LOG = LoggerFactory.getLogger(ConfigService.class);
+    
     /** The Configuration file. */
     @Getter
     private final File configFile;
     /** The directory for the repository. */
     @Getter
     private final File repoDir;
-
+    
     /** List of supported suites. */
     @Getter
     private String suites;
-
+    
     /**
      * Default constructor.
      *
      * @throws IOException
      *             I/O error.
      */
-    public ConfigService() throws IOException {
+    public ConfigService() {
         super();
-
+        
         final Properties props = new Properties();
         try (final InputStream input = this.getClass().getResourceAsStream("/config/defaultConfig.properties")) {
             props.load(input);
+        } catch (final IOException ex) {
+            ConfigService.LOG.error(ex.getMessage(), ex);
         }
         this.configFile = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem.conf"));
         this.repoDir = new File(StringUtils.defaultIfEmpty(props.getProperty("repo.dir"), "/opt/dederem"));
     }
-
+    
     /**
      * Method to read the configuration.
      *
@@ -81,7 +88,7 @@ public class ConfigService {
                 props.load(input);
             }
         }
-
+        
         this.suites = StringUtils.defaultIfBlank(props.getProperty("suites"), "main, contrib, non-free");
     }
 }

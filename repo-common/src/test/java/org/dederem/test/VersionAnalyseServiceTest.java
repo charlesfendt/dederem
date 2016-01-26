@@ -20,15 +20,18 @@
  */
 package org.dederem.test;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.DebVersion;
+import org.dederem.common.service.ConfigService;
+import org.dederem.common.service.RepositoryPoolService;
 import org.dederem.common.service.VersionAnalyseService;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -38,25 +41,49 @@ import org.junit.Test;
  */
 public final class VersionAnalyseServiceTest {
 
-	/**
-	 * Test method.
-	 *
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	@Test
-	public void testParsing() throws IOException {
-		final VersionAnalyseService service = new VersionAnalyseService();
+    /** Singleton J2EE for injection. */
+    private final ConfigService config = new ConfigService();
+    /** Singleton J2EE for injection. */
+    private final RepositoryPoolService repoPool = new RepositoryPoolService();
+    
+    /**
+     * Initialization of the test class.
+     *
+     * @throws Exception
+     *             Initialization error.
+     */
+    @Before
+    public void initialize() throws Exception {
+        this.config.loadConfig();
+        
+        final Field field1 = RepositoryPoolService.class.getDeclaredField("configService");
+        field1.setAccessible(true);
+        field1.set(this.repoPool, this.config);
+        this.repoPool.initialize();
+    }
+    
+    /**
+     * Test method.
+     *
+     * @throws Exception
+     *             I/O error.
+     */
+    @Test
+    public void testParsing() throws Exception {
+        final VersionAnalyseService service = new VersionAnalyseService();
+        final Field field1 = VersionAnalyseService.class.getDeclaredField("repoService");
+        field1.setAccessible(true);
+        field1.set(service, this.repoPool);
 
-		final InputStream input = this.getClass().getResourceAsStream("/repo/Packages.gz");
-		try {
-			final DebVersion ver = service.analyzeGzFile(input);
-			Assert.assertNotNull(ver);
-			final List<DebPackageDesc> pkgList = ver.getPackages();
-			Assert.assertNotNull(pkgList);
-			Assert.assertFalse(pkgList.isEmpty());
-		} finally {
-			IOUtils.closeQuietly(input);
-		}
-	}
+        final InputStream input = this.getClass().getResourceAsStream("/repo/Packages.gz");
+        try {
+            final DebVersion ver = service.analyzeGzFile("main", input);
+            Assert.assertNotNull(ver);
+            final List<DebPackageDesc> pkgList = ver.getPackages();
+            Assert.assertNotNull(pkgList);
+            Assert.assertFalse(pkgList.isEmpty());
+        } finally {
+            IOUtils.closeQuietly(input);
+        }
+    }
 }

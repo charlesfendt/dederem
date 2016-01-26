@@ -29,11 +29,14 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import javax.ejb.Singleton;
+import javax.inject.Inject;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.DebVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service for Debian version analyzes.
@@ -44,89 +47,161 @@ import org.dederem.common.bean.DebVersion;
 @Singleton
 public class VersionAnalyseService {
 
-	/**
-	 * Read method for "Packages" file.
-	 *
-	 * @param input
-	 *            InputStream on the text file
-	 * @return The object populated with the content of the file.
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	public final DebVersion analyzeGzFile(final InputStream input) throws IOException {
-		return this.analyzeFile(new GZIPInputStream(input));
-	}
+    /** Logger of the class. */
+    private static final Logger LOG = LoggerFactory.getLogger(VersionAnalyseService.class);
+    
+    /** Service for local repository management. */
+    @Inject
+    private RepositoryPoolService repoService;
 
-	/**
-	 * Read method for "Packages" file.
-	 *
-	 * @param input
-	 *            InputStream on the text file
-	 * @return The object populated with the content of the file.
-	 * @throws IOException
-	 *             I/O error.
-	 */
-	public final DebVersion analyzeFile(final InputStream input) throws IOException {
-		final DebVersion result = new DebVersion();
-		
-		final Map<String, StringBuilder> data = new HashMap<>();
-		StringBuilder lastData = null; // NOPMD - init
-		
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8));
-		String line = reader.readLine();
-		while (line != null) {
-			if (line.isEmpty()) {
-				// manage the end of the bloc
-				final DebPackageDesc pkgDesc = this.readPackageDesc(data);
-				if (pkgDesc != null) {
-					result.getPackages().add(pkgDesc);
-				}
-				data.clear();
-			} else {
-				// manage a new entry in the current bloc
-				if (Character.isWhitespace(line.charAt(0))) {
-					if (lastData != null) {
-						lastData.append(line);
-					}
-				} else {
-					final String key = StringUtils.substringBefore(line, ":");
-					final String value = StringUtils.substringAfter(line, ":");
-					lastData = new StringBuilder(value);
-					data.put(key, lastData);
-				}
-			}
-			line = reader.readLine();
-		}
-		return result;
-	}
-	
-	private DebPackageDesc readPackageDesc(final Map<String, StringBuilder> data) {
-		final DebPackageDesc result;
-		final String name = this.extractValueStr(data, "Package");
-		final String version = this.extractValueStr(data, "Version");
-		final String architecture = this.extractValueStr(data, "Architecture");
-		if (StringUtils.isNoneEmpty(name, version, architecture)) {
-			result = new DebPackageDesc();
-			result.setPackageName(name);
-			result.setPackageVersion(version);
-			result.setPackageArch(architecture);
-			result.setPackageSha1(this.extractValueStr(data, "SHA1"));
-			result.setPackageSha256(this.extractValueStr(data, "SHA256"));
-			result.setFileName(this.extractValueStr(data, "Filename"));
-			result.setFileSize(this.extractValueLong(data, "Size"));
-		} else {
-			result = null;
-		}
-		return result;
-	}
-	
-	private String extractValueStr(final Map<String, StringBuilder> data, final String key) {
-		final StringBuilder val = data.get(key);
-		return val == null ? null : val.toString().trim();
-	}
+    /**
+     * Read method for "Packages" file.
+     *
+     * @param input
+     *            InputStream on the text file
+     * @return The object populated with the content of the file.
+     * @throws IOException
+     *             I/O error.
+     */
+    public final DebVersion analyzeGzFile(final String suite, final InputStream input) throws IOException {
+        return this.analyzeFile(suite, new GZIPInputStream(input));
+    }
 
-	private long extractValueLong(final Map<String, StringBuilder> data, final String key) {
-		final String val = this.extractValueStr(data, key);
-		return StringUtils.isNumeric(val) ? Long.parseLong(val) : -1;
-	}
+    /**
+     * Read method for "Packages" file.
+     *
+     * @param input
+     *            InputStream on the text file
+     * @return The object populated with the content of the file.
+     * @throws IOException
+     *             I/O error.
+     */
+    public final DebVersion analyzeFile(final String suite, final InputStream input) throws IOException {
+        final DebVersion result = new DebVersion();
+
+        final Map<String, StringBuilder> data = new HashMap<>();
+        StringBuilder lastData = null; // NOPMD - init
+
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8));
+        String line = reader.readLine();
+        while (line != null) {
+            if (line.isEmpty()) {
+                // manage the end of the bloc
+                final DebPackageDesc pkgDesc = this.readPackageDesc(data);
+                if (pkgDesc != null) {
+                    // check if file already present in the repository
+                    final DebPackageDesc local = this.repoService.getPackageInLocalRepo(suite, pkgDesc.getDebPackage());
+                    if (local == null) {
+                        // add the package to package list.
+                        result.getPackages().add(pkgDesc);
+                    } else {
+                        if (this.checkPackageEquality(pkgDesc, local)) {
+                            // add the package to package list.
+                            result.getPackages().add(local);
+                        } else {
+                            // add the package to package list.
+                            result.getPackages().add(pkgDesc);
+                        }
+                    }
+                }
+                data.clear();
+            } else {
+                // manage a new entry in the current bloc
+                if (Character.isWhitespace(line.charAt(0))) {
+                    if (lastData != null) {
+                        lastData.append(line);
+                    }
+                } else {
+                    final String key = StringUtils.substringBefore(line, ":");
+                    final String value = StringUtils.substringAfter(line, ":");
+                    lastData = new StringBuilder(value);
+                    data.put(key, lastData);
+                }
+            }
+            line = reader.readLine();
+        }
+        return result;
+    }
+    
+    /**
+     * Method to check package equality.
+     *
+     * @param pkgDesc
+     *            The requested package.
+     * @param local
+     *            The known package.
+     */
+    private boolean checkPackageEquality(final DebPackageDesc pkgDesc, final DebPackageDesc local) {
+        boolean result = true;
+        if (local.getFileSize() != pkgDesc.getFileSize()) {
+            result = false;
+            VersionAnalyseService.LOG.warn("The package {0} has the wrong size.", pkgDesc.getDebPackage().toString());
+        }
+        final String packageSha1 = local.getPackageSha1();
+        if (StringUtils.isNotEmpty(packageSha1) && packageSha1.contentEquals(pkgDesc.getPackageSha1())) {
+            result = false;
+            VersionAnalyseService.LOG.warn("The package {0} has the wrong SHA1.", pkgDesc.getDebPackage().toString());
+        }
+        final String packageSha256 = local.getPackageSha256();
+        if (StringUtils.isNotEmpty(packageSha256) && packageSha256.contentEquals(pkgDesc.getPackageSha256())) {
+            result = false;
+            VersionAnalyseService.LOG.warn("The package {0} has the wrong SHA256.", pkgDesc.getDebPackage().toString());
+        }
+        return result;
+    }
+
+    /**
+     * Read method to generate the packageDescription object from read map.
+     *
+     * @param data
+     *            read data map.
+     * @return the object which describe the debian package.
+     */
+    private DebPackageDesc readPackageDesc(final Map<String, StringBuilder> data) {
+        final DebPackageDesc result;
+        final String name = this.extractValueStr(data, "Package");
+        final String version = this.extractValueStr(data, "Version");
+        final String architecture = this.extractValueStr(data, "Architecture");
+        if (StringUtils.isNoneEmpty(name, version, architecture)) {
+            result = new DebPackageDesc();
+            result.setPackageName(name);
+            result.setPackageVersion(version);
+            result.setPackageArch(architecture);
+            result.setPackageSha1(this.extractValueStr(data, "SHA1"));
+            result.setPackageSha256(this.extractValueStr(data, "SHA256"));
+            result.setFileName(this.extractValueStr(data, "Filename"));
+            result.setFileSize(this.extractValueLong(data, "Size"));
+        } else {
+            result = null;
+        }
+        return result;
+    }
+
+    /**
+     * Extract method.
+     *
+     * @param data
+     *            Map of read data.
+     * @param key
+     *            Key to extract.
+     * @return The value for the given key in the map or null. The value is returned in String format.
+     */
+    private String extractValueStr(final Map<String, StringBuilder> data, final String key) {
+        final StringBuilder val = data.get(key);
+        return val == null ? null : val.toString().trim();
+    }
+
+    /**
+     * Extract method.
+     *
+     * @param data
+     *            Map of read data.
+     * @param key
+     *            Key to extract.
+     * @return The value for the given key in the map or null. The value is returned in long format.
+     */
+    private long extractValueLong(final Map<String, StringBuilder> data, final String key) {
+        final String val = this.extractValueStr(data, key);
+        return StringUtils.isNumeric(val) ? Long.parseLong(val) : -1;
+    }
 }
