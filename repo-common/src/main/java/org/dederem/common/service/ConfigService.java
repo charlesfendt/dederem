@@ -42,24 +42,24 @@ import lombok.Getter;
  */
 @Singleton
 public class ConfigService {
-    
+
     /** Logger of the class. */
     private static final Logger LOG = LoggerFactory.getLogger(ConfigService.class);
-    
+
     /** The Configuration file. */
     @Getter
     private final File configFile;
     /** The directory for the repository. */
     @Getter
     private final File repoDir;
-    
+
     /** List of supported suites. */
     @Getter
     private String suites;
     /** The base repository. */
     @Getter
     private String baseRepository;
-    
+
     /**
      * Default constructor.
      *
@@ -68,7 +68,7 @@ public class ConfigService {
      */
     public ConfigService() {
         super();
-        
+
         final Properties props = new Properties();
         try (final InputStream input = this.getClass().getResourceAsStream("/config/defaultConfig.properties")) {
             props.load(input);
@@ -78,7 +78,7 @@ public class ConfigService {
         this.configFile = new File(StringUtils.defaultIfEmpty(props.getProperty("config.dir"), "/etc/dederem.conf"));
         this.repoDir = new File(StringUtils.defaultIfEmpty(props.getProperty("repo.dir"), "/opt/dederem"));
     }
-    
+
     /**
      * Method to read the configuration.
      *
@@ -93,8 +93,8 @@ public class ConfigService {
                 props.load(input);
             }
         }
-        
+
         this.suites = StringUtils.defaultIfBlank(props.getProperty("suites"), "main, contrib, non-free");
-        this.baseRepository = StringUtils.defaultIfBlank(props.getProperty("baseRepository"), "http://ftp.de.debian.org/debian/dist/");
+        this.baseRepository = StringUtils.defaultIfBlank(props.getProperty("baseRepository"), "http://ftp.de.debian.org/debian/");
     }
 }

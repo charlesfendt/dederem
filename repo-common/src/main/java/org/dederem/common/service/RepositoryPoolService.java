@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.dederem.common.bean.DebPackage;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.SuiteDesc;
@@ -80,6 +82,9 @@ public final class RepositoryPoolService {
      */
     @PostConstruct
     public void initialize() {
+        // initialize bouncyCastle
+        Security.addProvider(new BouncyCastleProvider());
+
         // use the configuration parameter to manage suites.
         final String[] suites = StringUtils.split(this.configService.getSuites(), " \t,;");
         this.suites = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(suites)));
@@ -125,11 +130,11 @@ public final class RepositoryPoolService {
      * @throws IOException
      *             I/O or parsing error.
      */
-    private DebPackageDesc loadPackageDesc(final File deb) throws IOException {
+    public DebPackageDesc loadPackageDesc(final File deb) throws IOException {
         final String path = deb.getAbsolutePath();
 
         final DebPackageDesc result = new DebPackageDesc();
-        result.setFileName(path);
+        result.setFileName(StringUtils.substring(path, path.indexOf("/pool/") + 1));
         result.setFileSize(deb.length());
         result.setPresent(true);
         
@@ -186,7 +191,7 @@ public final class RepositoryPoolService {
                     }
                 }
                 
-                this.hashFile(desc, result);
+                this.hashFile(deb, result);
                 
                 // Write the description file
                 props.setProperty("name", result.getPackageName());
@@ -256,6 +261,33 @@ public final class RepositoryPoolService {
             result = null;
         } else {
             result = suite.getPackages().get(pack);
+        }
+        return result;
+    }
+    
+    /**
+     * Method to check package equality.
+     *
+     * @param pkgDesc
+     *            The requested package.
+     * @param local
+     *            The known package.
+     */
+    public boolean checkPackageEquality(final DebPackageDesc pkgDesc, final DebPackageDesc local) {
+        boolean result = true;
+        if (local.getFileSize() != pkgDesc.getFileSize()) {
+            result = false;
+            RepositoryPoolService.LOG.warn("The package {0} has the wrong size.", pkgDesc.getDebPackage().toString());
+        }
+        final String packageSha1 = local.getPackageSha1();
+        if (StringUtils.isNotEmpty(packageSha1) && packageSha1.contentEquals(pkgDesc.getPackageSha1())) {
+            result = false;
+            RepositoryPoolService.LOG.warn("The package {0} has the wrong SHA1.", pkgDesc.getDebPackage().toString());
+        }
+        final String packageSha256 = local.getPackageSha256();
+        if (StringUtils.isNotEmpty(packageSha256) && packageSha256.contentEquals(pkgDesc.getPackageSha256())) {
+            result = false;
+            RepositoryPoolService.LOG.warn("The package {0} has the wrong SHA256.", pkgDesc.getDebPackage().toString());
         }
         return result;
     }

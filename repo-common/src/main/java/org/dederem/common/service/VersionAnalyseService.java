@@ -35,8 +35,6 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.dederem.common.bean.DebPackageDesc;
 import org.dederem.common.bean.DebVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Service for Debian version analyzes.
@@ -46,14 +44,11 @@ import org.slf4j.LoggerFactory;
  */
 @Singleton
 public class VersionAnalyseService {
-
-    /** Logger of the class. */
-    private static final Logger LOG = LoggerFactory.getLogger(VersionAnalyseService.class);
     
     /** Service for local repository management. */
     @Inject
     private RepositoryPoolService repoService;
-
+    
     /**
      * Read method for "Packages" file.
      *
@@ -66,7 +61,7 @@ public class VersionAnalyseService {
     public final DebVersion analyzeGzFile(final String suite, final InputStream input) throws IOException {
         return this.analyzeFile(suite, new GZIPInputStream(input));
     }
-
+    
     /**
      * Read method for "Packages" file.
      *
@@ -78,10 +73,10 @@ public class VersionAnalyseService {
      */
     public final DebVersion analyzeFile(final String suite, final InputStream input) throws IOException {
         final DebVersion result = new DebVersion();
-
+        
         final Map<String, StringBuilder> data = new HashMap<>();
         StringBuilder lastData = null; // NOPMD - init
-
+        
         final BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8));
         String line = reader.readLine();
         while (line != null) {
@@ -95,7 +90,7 @@ public class VersionAnalyseService {
                         // add the package to package list.
                         result.getPackages().add(pkgDesc);
                     } else {
-                        if (this.checkPackageEquality(pkgDesc, local)) {
+                        if (this.repoService.checkPackageEquality(pkgDesc, local)) {
                             // add the package to package list.
                             result.getPackages().add(local);
                         } else {
@@ -120,33 +115,7 @@ public class VersionAnalyseService {
             }
             line = reader.readLine();
         }
-        return result;
-    }
-    
-    /**
-     * Method to check package equality.
-     *
-     * @param pkgDesc
-     *            The requested package.
-     * @param local
-     *            The known package.
-     */
-    private boolean checkPackageEquality(final DebPackageDesc pkgDesc, final DebPackageDesc local) {
-        boolean result = true;
-        if (local.getFileSize() != pkgDesc.getFileSize()) {
-            result = false;
-            VersionAnalyseService.LOG.warn("The package {0} has the wrong size.", pkgDesc.getDebPackage().toString());
-        }
-        final String packageSha1 = local.getPackageSha1();
-        if (StringUtils.isNotEmpty(packageSha1) && packageSha1.contentEquals(pkgDesc.getPackageSha1())) {
-            result = false;
-            VersionAnalyseService.LOG.warn("The package {0} has the wrong SHA1.", pkgDesc.getDebPackage().toString());
-        }
-        final String packageSha256 = local.getPackageSha256();
-        if (StringUtils.isNotEmpty(packageSha256) && packageSha256.contentEquals(pkgDesc.getPackageSha256())) {
-            result = false;
-            VersionAnalyseService.LOG.warn("The package {0} has the wrong SHA256.", pkgDesc.getDebPackage().toString());
-        }
+        result.setSuite(suite);
         return result;
     }
 
@@ -176,7 +145,7 @@ public class VersionAnalyseService {
         }
         return result;
     }
-
+    
     /**
      * Extract method.
      *
@@ -190,7 +159,7 @@ public class VersionAnalyseService {
         final StringBuilder val = data.get(key);
         return val == null ? null : val.toString().trim();
     }
-
+    
     /**
      * Extract method.
      *
